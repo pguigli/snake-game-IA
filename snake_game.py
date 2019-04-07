@@ -31,28 +31,22 @@ class Square:
             SQUARE_SIZE
         )
 
-    def move(self, speed):
-        self.rect.move_ip(speed)
-        self.position = (self.rect.x, self.rect.y)
+    def move(self, coord, absolute=False):
+        if absolute:
+            self.rect.x = coord[0]
+            self.rect.y = coord[1]
+            self.position = coord
+        else:
+            self.rect.move_ip(coord)
+            self.position = (self.position[0] + coord[0],
+                             self.position[1] + coord[1])
 
-    # def get_alignment(self, other):
-    #     if self.rect.bottom == other.rect.top:
-    #         return "up"
-    #     elif self.rect.top == other.rect.bottom:
-    #         return "down"
-    #     elif self.rect.right == other.rect.left:
-    #         return "left"
-    #     elif self.rect.left == other.rect.right:
-    #         return "right"
-    #     else:
-    #         return None
-
-    def randomize_pos(self):
+    def move_randomly(self):
         x = random.choice(range(0, WIDTH, SQUARE_SIZE))
         y = random.choice(range(0, HEIGHT, SQUARE_SIZE))
-        self.position = (x, y)
         self.rect.x = x
         self.rect.y = y
+        self.position = (x, y)
 
 class Snake:
     def __init__(self):
@@ -104,7 +98,7 @@ class Game:
         self.speed = [0, SQUARE_SIZE]
         self.snake = Snake()
         self.apple = Square(typ='apple', color=RED)
-        self.apple.randomize_pos()
+        self.apple.move_randomly()
 
         pygame.init()
         self.screen = pygame.display.set_mode((width, height))
@@ -112,21 +106,27 @@ class Game:
         clock = pygame.time.Clock()
 
         while True:
-            self.screen.fill(WHITE)
-            self.render(self.apple)
-            for bodypart in self.snake:
-                bodypart.move(self.speed)
-                self.render(bodypart)
-
-            self.snake.head.move(self.speed)
-            self.check_apple()
-            if self.snake.collides():
-                pygame.quit()
-            pygame.display.update()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                 self.get_input(event)
+            
+            self.screen.fill(WHITE)
+            self.render(self.apple)
+            
+            self.snake.squares[0].move(self.speed)
+            self.render(self.snake.squares[0])
+            for i, square in enumerate(self.snake.squares[1:]):
+                coord_of_previous = (self.squares[i-1].x,
+                                     self.squares[i-1].y)
+                square.move(coord_of_previous, absolute=True)
+                self.render(square)
+
+            self.check_apple()
+            if self.snake.collides():
+                pygame.quit()
+            pygame.display.update()
+            
             clock.tick(GAME_SPEED)
 
     def get_input(self, event):
@@ -143,7 +143,7 @@ class Game:
     def check_apple(self):
         if self.snake.head.rect.colliderect(self.apple):
             self.snake.grow()
-            self.apple.randomize_pos()
+            self.apple.move_randomly()
 
     def render(self, square):
         pygame.draw.rect(self.screen, square.color, square.rect)
