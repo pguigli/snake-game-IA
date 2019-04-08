@@ -48,15 +48,12 @@ class Square:
         self.rect.x += coord[0]
         self.rect.y += coord[1]
         if absolute:
-            self.rect.x = coord[0]
-            self.rect.y = coord[1]
+            self.rect.x, self.rect.y = coord
 
     def move_randomly(self):
         '''Move square object to a random position'''
-        x = random.choice(range(0, WIDTH, SQUARE_SIZE))
-        y = random.choice(range(0, HEIGHT, SQUARE_SIZE))
-        self.rect.x = x
-        self.rect.y = y
+        self.rect.x = random.choice(range(0, WIDTH, SQUARE_SIZE))
+        self.rect.y = random.choice(range(0, HEIGHT, SQUARE_SIZE))
 
 
 class Snake:
@@ -80,24 +77,30 @@ class Snake:
         Returns:
             Boolean: snake dies or not
         '''
-        if (self.head.rect.x < 0 or
-                self.head.rect.x > WIDTH or
-                self.head.rect.y < 0 or
-                self.head.rect.y > HEIGHT):
+        edge_collision = (
+            self.head.rect.x < 0 or
+            self.head.rect.x > WIDTH or
+            self.head.rect.y < 0 or
+            self.head.rect.y > HEIGHT
+            )
+        if edge_collision:
             return True
         for square in self.squares:
-            if self.head.rect.colliderect(square.rect):
+            body_collision = self.head.rect.colliderect(square.rect)
+            if body_collision:
                 return True
         else:
             return False
         
-    def move(self, coord):
+    def move(self, speed):
         '''Move each snake bodypart that is not static.
         Squares are moved starting from the last, to the position of 
-        the square that just precedes it. Then, the head is moved.
+        the square that just precedes it. 
+        First square is moved to head position.
+        Finally, the head is moved according to current speed.
         
         Args:
-            coord (tuple): destination coordinates
+            speed (tuple): relative coordinates used to move head
         '''
         for i, square in enumerate(reversed(self.squares)):
             if square.static:
@@ -110,7 +113,7 @@ class Snake:
                     coord_of_previous = (self.squares[-i-2].rect.x,
                                          self.squares[-i-2].rect.y)
                 square.move(coord_of_previous, absolute=True)
-        self.head.move(coord, absolute=False)
+        self.head.move(speed, absolute=False)
     
     def grow(self):
         '''Check for growth, and grow the snake by one square if needed.
