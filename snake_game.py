@@ -1,5 +1,6 @@
 import pygame
 import random
+import time
 
 
 # GAME CONSTANTS
@@ -163,17 +164,16 @@ class Game:
             clock.tick(CLOCK_SPEED)
 
     def main_loop(self):
-        '''
-        What happens every frame:
-            Fill screen with background color
-            Check for QUIT event
-            Get player INPUT
-            Check if apple has been eaten
-            Check if snake is growing
-            Move the snake accordingly
-            Render apple and snake
-            Check for game over
-            Update display 
+        '''What happens every frame:
+        Fill screen with background color,
+        Check for QUIT event,
+        Get player INPUT,
+        Check if apple has been eaten,
+        Check if snake is growing,
+        Move the snake accordingly,
+        Render apple and snake,
+        Check for game over,
+        Update display.
         '''
         self.screen.fill(WHITE)
         for event in pygame.event.get():
@@ -187,9 +187,24 @@ class Game:
         self.render(self.snake.head)
         self.render(self.snake.squares)
         if self.snake.dies():
+            time.sleep(2)
             pygame.quit()
+        self.display_text(f'Score: {self.score}', 18, (0,0))
         pygame.display.update()
 
+    def display_text(self, text, size, position):
+        '''Print text to screen
+
+        Args:
+            text (str): message to display
+            size (int): font size
+            position (tuple): text coordinates on screen
+        '''
+        font = pygame.font.SysFont("arial", size)
+        message = font.render(text, True, BLACK)
+        self.screen.blit(message, position)
+        pygame.display.update()
+    
     def get_input(self, event):
         '''Get user input and adjust "speed" accordingly '''
         if event.type == pygame.KEYDOWN:
@@ -233,4 +248,3 @@ class Game:
 
 if __name__ == '__main__':
     Game(WIDTH, HEIGHT)
-
